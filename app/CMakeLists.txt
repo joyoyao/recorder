@@ -23,7 +23,10 @@ add_library( # Sets the name of the library.
              # Provides a relative path to your source file(s).
              # Associated headers in the same location as their source
              # file are automatically included.
-             src/main/cpp/recoder/ffmpegDecoder.cpp )
+             src/main/cpp/recoder/utils/AString.cpp
+             src/main/cpp/recoder/com_abcew_videorecoder_ARecorder.cpp
+
+             )
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because system libraries are included in the search path by
@@ -40,6 +43,7 @@ find_library( # Sets the name of the path variable.
 
 target_include_directories(recoder-lib PRIVATE
                            ${CMAKE_SOURCE_DIR}/src/main/cpp/FFmpegLibs/include
+                           ${CMAKE_SOURCE_DIR}/src/main/cpp/FFmpegLibs/recoder
                           )
 
 # Specifies libraries CMake should link to your target library. You

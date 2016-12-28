@@ -68,7 +68,7 @@ public class ARecorder {
 
     static {
         System.loadLibrary("stlport_shared");
-        System.loadLibrary("arecorder-jni");
+        System.loadLibrary("recoder-lib");
         nativeInit();
     }
 

@@ -186,6 +186,8 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 
 	private static int mIntValue;
 
+	ARecorder aRecorder;
+
 	private void initHandler(){
 		mHandler = new Handler(){
 			@Override
@@ -264,6 +266,7 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 		initHandler();
 		
 		initLayout();
+		aRecorder=new ARecorder();
 	}
 	
 	@Override

@@ -32,7 +32,7 @@ JNIEXPORT void JNICALL Java_com_abcew_videorecoder_ARecorder_nativeSetOutputFile
 /*
  * Class:     com_abcew_videorecoder_ARecorder
  * Method:    nativeSetChannels
- * Signature: (I)V
+ * Signature: (I)VnativeWriteVideo
  */
 JNIEXPORT void JNICALL Java_com_abcew_videorecoder_ARecorder_nativeSetChannels
   (JNIEnv *, jobject, jint);

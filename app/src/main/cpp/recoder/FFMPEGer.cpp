@@ -4,7 +4,6 @@
 
 #include "utils/Log.h"
 
-#include "openmax/OMX_IVCommon.h"
 
 namespace ARecoder {
 

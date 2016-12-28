@@ -54,8 +54,8 @@ void TimedEventQueue::start() {
     mRunning = true;
 }
 
-#define INT64_MIN (-0x7fffffffffffffff - 1)
-#define INT64_MAX 0x7fffffffffffffff
+//#define INT64_MIN (-0x7fffffffffffffff - 1)
+//#define INT64_MAX 0x7fffffffffffffff
 	
 void TimedEventQueue::stop(bool flush) {
     if (!mRunning) {

@@ -1,7 +1,6 @@
 #ifndef OPENAMEDIA_FFMPEGER_H
 #define OPENAMEDIA_FFMPEGER_H
-
-
+#define __STDC_FORMAT_MACROS
 
 #include "utils/MetaData.h"
 #include "utils/Errors.h"
@@ -11,7 +10,10 @@
 
 #include "utils/Common.h"
 
+
 extern "C"{
+#include "libavutil/common.h"
+
 #include "libavutil/channel_layout.h"
 #include "libavutil/opt.h"
 #include "libavutil/mathematics.h"

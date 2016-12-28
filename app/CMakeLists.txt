@@ -32,14 +32,15 @@ add_library( # Sets the name of the library.
              src/main/cpp/recoder/utils/MetaData.cpp
              src/main/cpp/recoder/utils/TimedEventQueue.cpp
              src/main/cpp/recoder/FFmpegAudioEncoder.cpp
-             src/main/cpp/recoder/ffmpegEncoder.cpp
+        #     src/main/cpp/recoder/ffmpegEncoder.cpp
              src/main/cpp/recoder/FFMPEGer.cpp
-             src/main/cpp/recoder/LMRSource.cpp
+           src/main/cpp/recoder/LMRSource.cpp
              src/main/cpp/recoder/LocalMediaRecorder.cpp
              src/main/cpp/recoder/MessageQueue.cpp
              src/main/cpp/recoder/MuxEngine.cpp
-             src/main/cpp/recoder/OpenSLRecorder.cpp
-             src/main/cpp/recoder/Prefetcher.cpp
+            src/main/cpp/recoder/OpenSLRecorder.cpp
+            src/main/cpp/recoder/Prefetcher.cpp
+             src/main/cpp/recoder/ANativeWindowRenderer.cpp
              )
 
 # Searches for a specified prebuilt library and stores the path as a

@@ -23,8 +23,6 @@
 
 #include "ANativeWindowRenderer.h"
 
-#include <stdlib.h>
-#include <stdio.h>
 
 namespace ARecoder {
 

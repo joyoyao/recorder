@@ -25,7 +25,21 @@ add_library( # Sets the name of the library.
              # file are automatically included.
              src/main/cpp/recoder/utils/AString.cpp
              src/main/cpp/recoder/com_abcew_videorecoder_ARecorder.cpp
-
+             src/main/cpp/recoder/utils/ColorConverter.cpp
+             src/main/cpp/recoder/utils/Common.cpp
+             src/main/cpp/recoder/utils/MediaBuffer.cpp
+             src/main/cpp/recoder/utils/MediaBufferGroup.cpp
+             src/main/cpp/recoder/utils/MetaData.cpp
+             src/main/cpp/recoder/utils/TimedEventQueue.cpp
+             src/main/cpp/recoder/FFmpegAudioEncoder.cpp
+             src/main/cpp/recoder/ffmpegEncoder.cpp
+             src/main/cpp/recoder/FFMPEGer.cpp
+             src/main/cpp/recoder/LMRSource.cpp
+             src/main/cpp/recoder/LocalMediaRecorder.cpp
+             src/main/cpp/recoder/MessageQueue.cpp
+             src/main/cpp/recoder/MuxEngine.cpp
+             src/main/cpp/recoder/OpenSLRecorder.cpp
+             src/main/cpp/recoder/Prefetcher.cpp
              )
 
 # Searches for a specified prebuilt library and stores the path as a
@@ -53,6 +67,8 @@ target_include_directories(recoder-lib PRIVATE
 target_link_libraries( # Specifies the target library.
                        recoder-lib
                        lib_ffmpeg
+                       android
+                       OpenSLES
                        # Links the target library to the log library
                        # included in the NDK.
                        ${log-lib} )

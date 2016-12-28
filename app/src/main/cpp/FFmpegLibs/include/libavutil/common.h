@@ -23,6 +23,8 @@
  * common internal and external API header
  */
 
+/////////
+
 #ifndef AVUTIL_COMMON_H
 #define AVUTIL_COMMON_H
 

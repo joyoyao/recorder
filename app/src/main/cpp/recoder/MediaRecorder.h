@@ -55,7 +55,6 @@ namespace ARecoder {
 		virtual void setOutputFile(const char* path) = 0;
 		virtual void setListener(MediaRecorderListener* listener) = 0;
 		virtual void setParameter(const char* param) = 0;
-		virtual void setPreview(ANativeWindow* window) = 0;
 		virtual void setChannels(int channels) = 0;
 		virtual void setSampleRate(int sampleRate) = 0;
 		virtual void setVideoSize(int width, int height) = 0;

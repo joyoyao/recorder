@@ -5,7 +5,6 @@
 #include <stdint.h>
 
 #define  LOG_TAG "APlayer-jni"
-#include "utils/Log.h"
 #include "MediaRecorder.h"
 #include "LocalMediaRecorder.h"
 
@@ -94,7 +93,12 @@ void JNIMediaRecorderListener::notifyLog(const char* log) {
 }
 
 void JNIMediaRecorderListener::registerCurThread(){
+
+    ALOGE("JNIMediaRecorderListener %d ",1);
+
     g_jvm->AttachCurrentThread(&mEnv, NULL);
+    ALOGE("JNIMediaRecorderListener %d ",2);
+
 }
 
 void JNIMediaRecorderListener::unRegisterCurThread(){
@@ -359,4 +363,10 @@ JNIEXPORT void JNICALL Java_com_abcew_videorecoder_ARecorder_nativeInit
         (JNIEnv *env, jclass clazz){
     JCLASS_FIELD_ID_NATIVE_CONTEXT = env->GetFieldID(clazz, "mNativeContext", "I");
     JCLASS_METHOD_ID_POST_EVENT_FROM_NATIVE = env->GetStaticMethodID(clazz, "postEventFromNative", "(Ljava/lang/Object;III[B)V");
+}
+
+jint JNI_OnLoad(JavaVM* vm, void* reserved){
+    g_jvm = vm;
+
+    return JNI_VERSION_1_4;
 }

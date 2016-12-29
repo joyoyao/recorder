@@ -36,7 +36,7 @@ namespace ARecoder {
 		MetaData* mMetaData;
 
 		MediaBufferGroup* mGroup;
-		List<MediaBuffer*> mBusyList;
+		list<MediaBuffer*> mBusyList;
 		MediaBuffer* mSLBuffer;
 
 		int mSampleRate;
@@ -82,7 +82,7 @@ namespace ARecoder {
 		OMX_COLOR_FORMATTYPE mColor;
 
 		MediaBufferGroup* mGroup;
-		List<MediaBuffer*> mBusyList;
+		list<MediaBuffer*> mBusyList;
 
 		bool deInit();
 		void reset();

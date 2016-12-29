@@ -88,7 +88,7 @@ namespace ARecoder {
 	}
 	
 	void Prefetcher::SubSource::clear_l(){
-		List<MediaBuffer*>::iterator it = mBusyList.begin();
+		list<MediaBuffer*>::iterator it = mBusyList.begin();
 		while(it != mBusyList.end()){
 			MediaBuffer* buf = *it;
 			buf->release();

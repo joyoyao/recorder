@@ -19,9 +19,10 @@
 
 #include <pthread.h>
 
-#include "List.h"
+#include<list>
 #include "Mutex.h"
 #include "Condition.h"
+using  namespace std;
 
 namespace ARecoder {
 
@@ -108,7 +109,7 @@ private:
     };
 
     pthread_t mThread;
-    List<QueueItem> mQueue;
+    list<QueueItem> mQueue;
 	Mutex mLock;
     Condition mQueueNotEmptyCondition;
     Condition mQueueHeadChangedCondition;

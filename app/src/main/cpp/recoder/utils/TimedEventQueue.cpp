@@ -22,8 +22,8 @@
 #include "Log.h"
 
 #include "TimedEventQueue.h"
-
-#include "Common.h"
+#include<list>
+using  namespace std;
 namespace ARecoder {
 
 TimedEventQueue::TimedEventQueue()
@@ -101,7 +101,7 @@ TimedEventQueue::event_id TimedEventQueue::postTimedEvent(
 
     event->setEventID(mNextEventID++);
 
-    List<QueueItem>::iterator it = mQueue.begin();
+    list<QueueItem>::iterator it = mQueue.begin();
     while (it != mQueue.end() && realtime_us >= (*it).realtime_us) {
         ++it;
     }
@@ -154,7 +154,7 @@ void TimedEventQueue::cancelEvents(
         bool stopAfterFirstMatch) {
     Mutex::Autolock autoLock(mLock);
 
-    List<QueueItem>::iterator it = mQueue.begin();
+    list<QueueItem>::iterator it = mQueue.begin();
     while (it != mQueue.end()) {
         if (!(*predicate)(cookie, (*it).event)) {
             ++it;
@@ -210,7 +210,7 @@ void TimedEventQueue::threadEntry() {
                     break;
                 }
 
-                List<QueueItem>::iterator it = mQueue.begin();
+                list<QueueItem>::iterator it = mQueue.begin();
                 eventID = (*it).event->eventID();
 
                 now_us = getCurrentTimeUS();
@@ -268,7 +268,7 @@ void TimedEventQueue::threadEntry() {
 
 TimedEventQueue::Event* TimedEventQueue::removeEventFromQueue_l(
         event_id id) {
-    for (List<QueueItem>::iterator it = mQueue.begin();
+    for (list<QueueItem>::iterator it = mQueue.begin();
          it != mQueue.end(); ++it) {
         if ((*it).event->eventID() == id) {
             Event* event = (*it).event;

@@ -92,7 +92,7 @@ namespace ARecoder {
 			mSLRecorder = NULL;
 		}
 
-		List<MediaBuffer*>::iterator it = mBusyList.begin();
+		list<MediaBuffer*>::iterator it = mBusyList.begin();
 		while(it != mBusyList.end()){
 			MediaBuffer* buffer = *it;
 			buffer->release();
@@ -275,8 +275,8 @@ namespace ARecoder {
 			delete mMetaData;
 			mMetaData = NULL;
 		}
-		
-		List<MediaBuffer*>::iterator it = mBusyList.begin();
+
+		list<MediaBuffer*>::iterator it = mBusyList.begin();
 		while(it != mBusyList.end()){
 			MediaBuffer* buffer = *it;
 			buffer->release();

@@ -22,15 +22,14 @@
 #define OPENAMEDIA_PREFETCHER_H
 
 #include <pthread.h>
-#include "utils/List.h"
 #include "utils/Mutex.h"
 #include "utils/Condition.h"
 #include "utils/Errors.h"
 #include "utils/MediaBuffer.h"
 #include "utils/MediaBufferGroup.h"
-
+#include<list>
 #include "utils/Common.h"
-
+using  namespace std;
 namespace ARecoder {
 
 #define MAX_SUB_SOURCE_BUFFER_SIZE (1920*1080*3/2)
@@ -82,7 +81,7 @@ namespace ARecoder {
 			void clear();
 			void clear_l();
 			
-			List<MediaBuffer*> mBusyList;
+			list<MediaBuffer*> mBusyList;
 			MediaBufferGroup mGroup;
 			
 			SubSource(const SubSource&);

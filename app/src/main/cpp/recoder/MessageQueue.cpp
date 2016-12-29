@@ -38,7 +38,7 @@ namespace ARecoder {
 	MessageQueue::~MessageQueue(){		
 		stop();
 
-		List<Message*>::iterator it = mFreeList.begin();
+		list<Message*>::iterator it = mFreeList.begin();
 		while(it != mFreeList.end()){
 			Message* tmp = *it;
 			free(tmp);
@@ -93,7 +93,7 @@ namespace ARecoder {
 		if(mDone)
 			return;
 
-		for(List<Message*>::iterator it = mObtainList.begin(); it != mObtainList.end(); ++it){
+		for(list<Message*>::iterator it = mObtainList.begin(); it != mObtainList.end(); ++it){
 			Message* tmp = *it;
 			if(tmp == msg){
 				mObtainList.erase(it);
@@ -114,7 +114,7 @@ namespace ARecoder {
 	void MessageQueue::threadEntry(){		
 		for(;;){
 			Message* msg = NULL;
-
+			ALOGE("threadEntry 1");
 			{
 				Mutex::Autolock ao(mLock);
 
@@ -128,12 +128,15 @@ namespace ARecoder {
 
 				msg = *mRunList.begin();
 			}
+			ALOGE("threadEntry 2");
 
 			if(msg == NULL)
 				continue;
-			
+			ALOGE("threadEntry 3");
+
 			mHandleMessage(msg, mContext);
-			
+			ALOGE("threadEntry 4");
+
 			{
 				Mutex::Autolock ao(mLock);
 				mRunList.erase(mRunList.begin());

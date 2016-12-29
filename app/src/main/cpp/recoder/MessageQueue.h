@@ -24,8 +24,9 @@
 #include <pthread.h>
 #include "utils/Mutex.h"
 #include "utils/Condition.h"
-#include "utils/List.h"
-
+#include<list>
+//#include "utils/List.h"
+using  namespace std;
 namespace ARecoder {
 
 	struct Message {
@@ -53,9 +54,9 @@ namespace ARecoder {
 		bool mThreadExited;
 		bool mStarted;
 
-		List<Message*> mFreeList;
-		List<Message*> mObtainList;
-		List<Message*> mRunList;
+		list<Message*> mFreeList;
+		list<Message*> mObtainList;
+		list<Message*> mRunList;
 
 		static void* ThreadWrapper(void* me);
 		void threadEntry();

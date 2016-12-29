@@ -245,6 +245,43 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 			}
 		};
 	}
+
+
+
+	private MyRecorderListener mRecorderListener = new MyRecorderListener();
+
+	private class MyRecorderListener implements ARecorder.ARecorderListener {
+
+		@Override
+		public void onStart() {
+//			if(mPreviewRunning){
+//				mCamera.stopPreview();
+//				mPreviewRunning = false;
+//			}
+//
+//			Camera.Parameters p = mCamera.getParameters();
+//			p.setPreviewSize(320, 240);
+//			p.setPreviewFpsRange(10, 15);
+//			mCamera.setParameters(p);
+//
+//			mCamera.setPreviewCallback(new PreviewCallback(){
+//				@Override
+//				public void onPreviewFrame(byte[] arg0, Camera arg1) {
+//					mRecorder.writeVideo(arg0, 320 * 240 * 3 / 2);
+//				}
+//			});
+//
+//			try {
+//				mCamera.setPreviewDisplay(mSurfaceView.getHolder());
+//			} catch (Exception ex) {
+//			}
+//
+//			mCamera.startPreview();
+//
+//			mPreviewRunning = true;
+		}
+
+	}
 	
 
 	@Override

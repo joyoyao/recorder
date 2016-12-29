@@ -15,6 +15,9 @@ public class ARecorder {
     private ARecorderListener mListener;
     public interface ARecorderListener {
         public void onStart();
+
+        public void onStop();
+
     }
 
     private Handler mEventHandler = null;
@@ -128,6 +131,7 @@ public class ARecorder {
     private static final int NATIVE_MSG_START_DONE = 4;
     private static final int NATIVE_MSG_ERROR = 5;
     private static final int NATIVE_MSG_NOTIFY_LOG_INFO = 6;
+    private static final int NATIVE_MSG_STOP_DONE = 7;
 
     private native void nativeSetOutputFile(String path);
     private native void nativeSetChannels(int channels);

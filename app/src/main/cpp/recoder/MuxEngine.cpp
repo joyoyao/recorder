@@ -39,7 +39,7 @@ namespace ARecoder {
 		do{
 			mFFMPEG = new FFMPEGer;
 			mFFMPEG->setOutputFile(mOutputFile);
-			mFFMPEG->setVideoSize(320, 240);
+			mFFMPEG->setVideoSize(width, height);
 			mFFMPEG->setVideoColorFormat(OMX_COLOR_FormatYUV420SemiPlanar);
 			bool res = mFFMPEG->init(NULL);
 			if(!res)
@@ -135,7 +135,7 @@ namespace ARecoder {
 				if(!res)
 					break;
 			
-				mFFMPEG->encodeAudio(buffer, out);
+//				mFFMPEG->encodeAudio(buffer, out);
 
 				if(mVideoSrc != NULL)
 					mNextReadAudio = false;
@@ -145,6 +145,8 @@ namespace ARecoder {
 					break;
 			
 				mFFMPEG->encodeVideo(buffer, out);
+
+				ALOGI("encodeVideo");
 
 				if(mAudioSrc != NULL)
 					mNextReadAudio = true;

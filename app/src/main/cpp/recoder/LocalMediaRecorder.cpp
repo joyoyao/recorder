@@ -22,7 +22,7 @@ namespace ARecoder {
     }
 
     LocalMediaRecorder::~LocalMediaRecorder() {
-        stop();
+        onStop();
 
         if (mMsgQueue != NULL) {
             delete mMsgQueue;
@@ -117,8 +117,12 @@ namespace ARecoder {
     }
 
     void LocalMediaRecorder::stop() {
-        mPrefetcher->stop();
-        mMuxEngine->stop();
+
+
+        Message *msg = mMsgQueue->obtainMessage();
+        msg->what = MSG_STOP;
+        mMsgQueue->sendMessage(msg);
+
     }
 
     void LocalMediaRecorder::writeVideo(void *data, int dataSize) {
@@ -196,6 +200,9 @@ namespace ARecoder {
 
                 onStart();
                 break;
+            case MSG_STOP:
+                onStop();
+                break;
             default:
                 break;
         }
@@ -205,9 +212,24 @@ namespace ARecoder {
 
     }
 
+    void LocalMediaRecorder::onStop() {
+
+        ALOGI("LocalMediaRecorder onStop1");
+
+        mPrefetcher->stop();
+        ALOGI("LocalMediaRecorder onStop2");
+
+        mMuxEngine->stop();
+        ALOGI("LocalMediaRecorder onStop2");
+
+
+    }
+
     void LocalMediaRecorder::onStart() {
         mMuxEngine = new MuxEngine();
         mMuxEngine->setOutputFile(mOutputFile);
+        mMuxEngine->width = mWidth;
+        mMuxEngine->height = mHeight;
         bool res = mMuxEngine->init();
         if (!res) {
             mListener->notify(MediaRecorderListener::NATIVE_MSG_ERROR);
@@ -242,7 +264,6 @@ namespace ARecoder {
         mMuxEngine->setAudioSource(mPrefetcher->getSource(MEDIA_TYPE_AUDIO));
         mMuxEngine->setVideoSource(mPrefetcher->getSource(MEDIA_TYPE_VIDEO));
         mMuxEngine->start();
-
         mListener->notify(MediaRecorderListener::NATIVE_MSG_START_DONE);
     }
 

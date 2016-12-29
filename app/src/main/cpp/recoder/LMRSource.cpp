@@ -308,8 +308,9 @@ namespace ARecoder {
 			mDone = true;
 			mStarted = false;
 		}
-
+		ALOGI("LMRVideoSource stop1");
 		mGroup->stop_acquire();
+		ALOGI("LMRVideoSource stop2");
 	}
 	
 	status_t LMRVideoSource::read(MediaBuffer** buffer){
@@ -502,16 +503,20 @@ namespace ARecoder {
 		if(!mStarted)
 			return true;
 
+		ALOGI("LMRSource stop1");
+
 		if(mAudioSource != NULL){
 			mAudioSource->stop();
 		}
-
+		ALOGI("LMRSource stop2");
 		if(mVideoSource != NULL){
 			mVideoSource->stop();
 		}
-		
+		ALOGI("LMRSource stop3");
+
 		mStarted = false;
-		
+		ALOGI("LMRSource stop4");
+
 		return true;
 	}
 	

@@ -27,6 +27,9 @@ namespace ARecoder {
 		bool stop();
 
 		bool getAudioEncodeBufferSize(int* bufSize);
+
+		int width;
+		int height;
 		
 	private:
 		Mutex mLock;
@@ -49,6 +52,9 @@ namespace ARecoder {
 
 		bool deInit();
 		void reset();
+
+
+
 
 		static void* ThreadWrapper(void* context);
 		void threadEntry();

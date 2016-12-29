@@ -70,6 +70,7 @@ namespace ARecoder {
 
 		void onSetParameter(const char*);
 		void onStart();
+		void onStop();
 
 		LocalMediaRecorder(const LocalMediaRecorder&);
 		LocalMediaRecorder& operator=(const LocalMediaRecorder&);

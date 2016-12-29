@@ -21,237 +21,245 @@
 #include "Prefetcher.h"
 
 #define LOG_TAG "Prefetcher"
+
 #include "utils/Log.h"
 
 namespace ARecoder {
 
-	///////////////////////////////////////
-	Prefetcher::SubSource::SubSource(int capacity)
-		:mDone(false){
-		for(int i = 0; i < capacity; ++i){
-			mGroup.add_buffer(new MediaBuffer(MAX_SUB_SOURCE_BUFFER_SIZE));
-		}
-	}
-	
-	Prefetcher::SubSource::~SubSource(){
-		stop();		
-	}
+    ///////////////////////////////////////
+    Prefetcher::SubSource::SubSource(int capacity)
+            : mDone(false) {
+        for (int i = 0; i < capacity; ++i) {
+            mGroup.add_buffer(new MediaBuffer(MAX_SUB_SOURCE_BUFFER_SIZE));
+        }
+    }
 
-	void Prefetcher::SubSource::stop(){
-		Mutex::Autolock ao(mLock);
+    Prefetcher::SubSource::~SubSource() {
+        stop();
+    }
 
-		mDone = true;
+    void Prefetcher::SubSource::stop() {
+        Mutex::Autolock ao(mLock);
 
-		clear_l();
-	}
-	
-	bool Prefetcher::SubSource::read(MediaBuffer** buffer) {
-		Mutex::Autolock ao(mLock);
-		
-		while(!mDone && mBusyList.empty()){
-			mCond.waitRelative(mLock, 50 * 1000000);
-		}
+        mDone = true;
 
-		if(mDone)
-			return false;
+        clear_l();
+    }
 
-		MediaBuffer* buf = *mBusyList.begin();
-		*buffer = buf;
-		
-		mBusyList.erase(mBusyList.begin());
+    bool Prefetcher::SubSource::read(MediaBuffer **buffer) {
+        Mutex::Autolock ao(mLock);
 
-		return true;
-	}
-		
-	bool Prefetcher::SubSource::write(MediaBuffer* buffer){
-		MediaBuffer* dstbuf = NULL;
-		mGroup.acquire_buffer(&dstbuf);
-		
-		Mutex::Autolock ao(mLock);
+        while (!mDone && mBusyList.empty()) {
+            mCond.waitRelative(mLock, 50 * 1000000);
+        }
 
-		if(dstbuf == NULL)
-			return false;
+        if (mDone)
+            return false;
 
-		dstbuf->copyDataFrom(buffer);
+        MediaBuffer *buf = *mBusyList.begin();
+        *buffer = buf;
 
-		mBusyList.push_back(dstbuf);
+        mBusyList.erase(mBusyList.begin());
 
-		mCond.signal();
-		
-		return true;
-	}
+        return true;
+    }
 
-	void Prefetcher::SubSource::clear(){
-		Mutex::Autolock ao(mLock);
-		
-		clear_l();
-	}
-	
-	void Prefetcher::SubSource::clear_l(){
-		list<MediaBuffer*>::iterator it = mBusyList.begin();
-		while(it != mBusyList.end()){
-			MediaBuffer* buf = *it;
-			buf->release();
-			
-			it = mBusyList.erase(it);
-		}
-	}
-	///////////////////////////////////
+    bool Prefetcher::SubSource::write(MediaBuffer *buffer) {
+        MediaBuffer *dstbuf = NULL;
+        mGroup.acquire_buffer(&dstbuf);
 
-	Prefetcher::Prefetcher(Source* src)
-		:mStarted(false),
-		 mSource(src),
-		 mSeeking(false),
-		 mSeekTime(0),
-		 mDone(false),
-		 mThreadExited(false){
-		mVideoSource = new SubSource(DEFAULT_VIDEO_SUB_SOURCE_CAPACITY);
-		mAudioSource = new SubSource(DEFAULT_AUDIO_SUB_SOURCE_CAPACITY);		
-	}
-	
-	Prefetcher::~Prefetcher(){
-		stop();
+        Mutex::Autolock ao(mLock);
 
-		delete mVideoSource;
-		mVideoSource = NULL;
-		delete mAudioSource;
-		mAudioSource = NULL;
-	}
+        if (dstbuf == NULL)
+            return false;
 
-	bool Prefetcher::start(){
-		if(mStarted)
-			return true;
+        dstbuf->copyDataFrom(buffer);
 
-		bool res = mSource->start();
-		if(!res){
-			ALOGE("fail to start mSource!!");
-			return false;
-		}
+        mBusyList.push_back(dstbuf);
 
-		pthread_attr_t attr;
-		pthread_attr_init(&attr);
-		//pthread_attr_setdetachstate(&attr, PTREAD_CREATE_JOINABLE);
-		pthread_create(&mThread, &attr, ThreadWrapper, this);
-		pthread_attr_destroy(&attr);
+        mCond.signal();
 
-		mStarted = true;
+        return true;
+    }
 
-		return true;
-	}
-	
-	bool Prefetcher::stop(){		
-		Mutex::Autolock ao(mLock);
-				
-		if(!mStarted)
-			return true;
-				
-		mSource->stop();
-		
-		mDone = true;
-		while(!mThreadExited){
-			mCond.waitRelative(mLock, 40 * 1000000);
-		}
+    void Prefetcher::SubSource::clear() {
+        Mutex::Autolock ao(mLock);
 
-		if(mVideoSource != NULL){
-			mVideoSource->stop();
-		}
+        clear_l();
+    }
 
-		if(mAudioSource != NULL){
-			mAudioSource->stop();
-		}
-		
-		mStarted = false;
-		
-		return true;
-	}
+    void Prefetcher::SubSource::clear_l() {
+        list<MediaBuffer *>::iterator it = mBusyList.begin();
+        while (it != mBusyList.end()) {
+            MediaBuffer *buf = *it;
+            buf->release();
 
-	bool Prefetcher::seek(int64_t timeMS){
-		Mutex::Autolock ao(mLock);
+            it = mBusyList.erase(it);
+        }
+    }
+    ///////////////////////////////////
 
-		if(!mStarted)
-			return false;
+    Prefetcher::Prefetcher(Source *src)
+            : mStarted(false),
+              mSource(src),
+              mSeeking(false),
+              mSeekTime(0),
+              mDone(false),
+              mThreadExited(false) {
+        mVideoSource = new SubSource(DEFAULT_VIDEO_SUB_SOURCE_CAPACITY);
+        mAudioSource = new SubSource(DEFAULT_AUDIO_SUB_SOURCE_CAPACITY);
+    }
 
-		mSeeking = true;
-		mSeekTime = timeMS;
+    Prefetcher::~Prefetcher() {
+        stop();
 
-		mSource->seek(timeMS);
+        delete mVideoSource;
+        mVideoSource = NULL;
+        delete mAudioSource;
+        mAudioSource = NULL;
+    }
 
-		mVideoSource->clear();
-		mAudioSource->clear();
+    bool Prefetcher::start() {
+        if (mStarted)
+            return true;
 
-		return true;
-	}
+        bool res = mSource->start();
+        if (!res) {
+            ALOGE("fail to start mSource!!");
+            return false;
+        }
 
-	Prefetcher::SubSource* Prefetcher::getSource(MediaType type){
-		if(type == MEDIA_TYPE_VIDEO)
-			return mVideoSource;
-		else if(type == MEDIA_TYPE_AUDIO)
-			return mAudioSource;
-		else
-			return NULL;
-	}
+        pthread_attr_t attr;
+        pthread_attr_init(&attr);
+        //pthread_attr_setdetachstate(&attr, PTREAD_CREATE_JOINABLE);
+        pthread_create(&mThread, &attr, ThreadWrapper, this);
+        pthread_attr_destroy(&attr);
 
-	void* Prefetcher::ThreadWrapper(void* me){
-		Prefetcher* p = (Prefetcher*)me;
-		p->threadEntry();
+        mStarted = true;
 
-		return NULL;
-	}
-	
-	void Prefetcher::threadEntry(){
-		for(;;){
-			{
-				Mutex::Autolock ao(mLock);
-				
-				if(mDone){
-					break;
-				}
-			}
-			
-			bool res;
-			MediaBuffer* srcbuf;
-			
-			status_t ret = mSource->read(&srcbuf);
-			if(ret != OK){
-				if(ret == ERROR_END_OF_STREAM){
-					ALOGE("EOS!!");
-					break;
-				}
-				
-				ALOGE("tmp fail to read src and continue!");
-				mCond.waitRelative(mLock, 20 * 1000000);
-				continue;//wait shall be placed before every 'continue' to previent the too much frequent token of mLock. which will block the other mLock(in stop()).
-			}
-			
-			int mediaType;
-			if(!srcbuf->meta_data()->findInt32(kKeyMediaType, &mediaType)){
-				ALOGE("fail to find media type info from the buffer %p!!", srcbuf->data());
-				srcbuf->release();
-				break;
-			}
+        return true;
+    }
 
-			SubSource* sub = NULL;
-			if(mediaType == MEDIA_TYPE_VIDEO){
-				sub = mVideoSource;
-			}else if(mediaType == MEDIA_TYPE_AUDIO){
-				sub = mAudioSource;
-			}else{
-				ALOGE("unknown buffer type:%d read from source!!", mediaType);
-				srcbuf->release();
-				break;
-			}
+    bool Prefetcher::stop() {
+        Mutex::Autolock ao(mLock);
+        ALOGI("Autolock1");
+        if (!mStarted)
+            return true;
+        ALOGI("Autolock2");
+        mSource->stop();
 
-			sub->write(srcbuf);//TODO: blocking call.
 
-			srcbuf->release();
-		}
+        ALOGI("Autolock3");
 
-		{
-			ALOGW("Prefetcher thread exited!!");
-			Mutex::Autolock ao(mLock);
-			mThreadExited = true;
-			mCond.signal();
-		}
-	}
+        mDone = true;
+        while (!mThreadExited) {
+            mCond.waitRelative(mLock, 40 * 1000000);
+        }
+        ALOGI("Autolock4");
+
+        if (mVideoSource != NULL) {
+            mVideoSource->stop();
+        }
+        ALOGI("Autolock5");
+
+
+        if (mAudioSource != NULL) {
+            mAudioSource->stop();
+        }
+        ALOGI("Autolock6");
+
+        mStarted = false;
+
+        return true;
+    }
+
+    bool Prefetcher::seek(int64_t timeMS) {
+        Mutex::Autolock ao(mLock);
+
+        if (!mStarted)
+            return false;
+
+        mSeeking = true;
+        mSeekTime = timeMS;
+
+        mSource->seek(timeMS);
+
+        mVideoSource->clear();
+        mAudioSource->clear();
+
+        return true;
+    }
+
+    Prefetcher::SubSource *Prefetcher::getSource(MediaType type) {
+        if (type == MEDIA_TYPE_VIDEO)
+            return mVideoSource;
+        else if (type == MEDIA_TYPE_AUDIO)
+            return mAudioSource;
+        else
+            return NULL;
+    }
+
+    void *Prefetcher::ThreadWrapper(void *me) {
+        Prefetcher *p = (Prefetcher *) me;
+        p->threadEntry();
+
+        return NULL;
+    }
+
+    void Prefetcher::threadEntry() {
+        for (; ;) {
+            {
+                Mutex::Autolock ao(mLock);
+
+                if (mDone) {
+                    break;
+                }
+            }
+
+            bool res;
+            MediaBuffer *srcbuf;
+
+            status_t ret = mSource->read(&srcbuf);
+            if (ret != OK) {
+                if (ret == ERROR_END_OF_STREAM) {
+                    ALOGE("EOS!!");
+                    break;
+                }
+
+                ALOGE("tmp fail to read src and continue!");
+                mCond.waitRelative(mLock, 20 * 1000000);
+                continue;//wait shall be placed before every 'continue' to previent the too much frequent token of mLock. which will block the other mLock(in stop()).
+            }
+
+            int mediaType;
+            if (!srcbuf->meta_data()->findInt32(kKeyMediaType, &mediaType)) {
+                ALOGE("fail to find media type info from the buffer %p!!", srcbuf->data());
+                srcbuf->release();
+                break;
+            }
+
+            SubSource *sub = NULL;
+            if (mediaType == MEDIA_TYPE_VIDEO) {
+                sub = mVideoSource;
+            } else if (mediaType == MEDIA_TYPE_AUDIO) {
+                sub = mAudioSource;
+            } else {
+                ALOGE("unknown buffer type:%d read from source!!", mediaType);
+                srcbuf->release();
+                break;
+            }
+
+            sub->write(srcbuf);//TODO: blocking call.
+
+            srcbuf->release();
+        }
+
+        {
+            ALOGW("Prefetcher thread exited!!");
+            Mutex::Autolock ao(mLock);
+            mThreadExited = true;
+            mCond.signal();
+        }
+    }
 
 }

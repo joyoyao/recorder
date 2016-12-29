@@ -52,6 +52,7 @@ import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.nio.ShortBuffer;
+import java.text.SimpleDateFormat;
 import java.util.Collections;
 import java.util.List;
 
@@ -95,6 +96,8 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 	private Button nextBtn;
 	private Button switchCameraIcon;
 	private boolean nextEnabled;
+
+	private Button recorderVideo;
 	
 	//录制视频和保存音频的类
 //	private volatile NewFFmpegFrameRecorder videoRecorder;
@@ -147,7 +150,7 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 	//录制的有效总时间
 	private long totalTime;
 	//视频帧率
-	private int frameRate = 30;
+	private int frameRate = 10;
 
 	private boolean recordFinish;
 	private Dialog creatingProgress;
@@ -186,7 +189,7 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 
 	private static int mIntValue;
 
-	ARecorder aRecorder;
+	ARecorder mRecorder;
 
 	private void initHandler(){
 		mHandler = new Handler(){
@@ -254,6 +257,9 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 
 		@Override
 		public void onStart() {
+
+			Log.i("onStart","MyRecorderListener onStart");
+			mPreviewRunning=true;
 //			if(mPreviewRunning){
 //				mCamera.stopPreview();
 //				mPreviewRunning = false;
@@ -281,6 +287,11 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 //			mPreviewRunning = true;
 		}
 
+		@Override
+		public void onStop() {
+
+		}
+
 	}
 	
 
@@ -299,11 +310,45 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 		//Find screen dimensions
 		screenWidth = displaymetrics.widthPixels;
 		screenHeight = displaymetrics.heightPixels;
+		recorderVideo= (Button) findViewById(R.id.recorder_video);
+		recorderVideo.setOnClickListener(new OnClickListener() {
+			@Override
+			public void onClick(View v) {
 
+				if(recorderVideo.isSelected()){
+					recorderVideo.setSelected(false);
+					if(mPreviewRunning){
+						mPreviewRunning = false;
+					}
+					if(mRecorder != null){
+						mRecorder.stop();
+						mRecorder.release();
+						mRecorder = null;
+					}
+
+				}else {
+					recorderVideo.setSelected(true);
+					mRecorder = new ARecorder();
+					SimpleDateFormat sDateFormat = new SimpleDateFormat("/yyyy-MM-dd_hh-mm-ss");
+					String date = sDateFormat.format(new java.util.Date());
+					String path = Environment.getExternalStorageDirectory().toString() + date + ".flv";
+					Log.i("RecorderActivity", path);
+					mRecorder.setOutputFile(path);
+					mRecorder.setListener(mRecorderListener);
+					mRecorder.setChannels(2);
+					mRecorder.setSampleRate(44100);
+					mRecorder.setVideoSize(previewWidth, previewHeight);
+					mRecorder.setColorFormat("nv21");
+					mRecorder.start();
+				}
+
+
+
+			}
+		});
 		initHandler();
 		
 		initLayout();
-		aRecorder=new ARecorder();
 	}
 	
 	@Override
@@ -330,6 +375,10 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 	@Override
 	protected void onPause() {
 		super.onPause();
+
+		if(mRecorder!=null){
+			mRecorder.release();
+		}
 		if(!isFinalizing)
 			finish();
 		
@@ -506,8 +555,8 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 //		videoRecorder.setVideoBitrate(recorderParameters.getVideoBitrate());
 //		videoRecorder.setAudioBitrate(recorderParameters.getAudioBitrate());
 		
-		audioRecordRunnable = new AudioRecordRunnable();
-		audioThread = new Thread(audioRecordRunnable);
+//		audioRecordRunnable = new AudioRecordRunnable();
+//		audioThread = new Thread(audioRecordRunnable);
 	}
 
 	public void startRecording() {
@@ -520,6 +569,8 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 //			e.printStackTrace();
 //		}
 	}
+
+	boolean mPreviewRunning=false;
 
 	/**
 	 * 停止录制
@@ -965,57 +1016,63 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
 
 		@Override
 		public void onPreviewFrame(byte[] data, Camera camera) {
-			//计算时间戳
-			long frameTimeStamp;
-			if(mAudioTimestamp == 0L && firstTime > 0L) {
-				frameTimeStamp = 1000L * (System.currentTimeMillis() - firstTime);
-			}else if (mLastAudioTimestamp == mAudioTimestamp) {
-				frameTimeStamp = mAudioTimestamp + frameTime;
-			}else{
-				long l2 = (System.nanoTime() - mAudioTimeRecorded) / 1000L;
-				frameTimeStamp = l2 + mAudioTimestamp;
-				mLastAudioTimestamp = mAudioTimestamp;
+			if(mPreviewRunning){
+				mRecorder.writeVideo(data,previewWidth*previewHeight*3/2);
+
 			}
 
-			//录制视频
-			if (recording && rec){
-				if(lastSavedframe != null
-					&& lastSavedframe.getFrameBytesData() != null ) {
-					//保存某一幀的图片
-					if (isFirstFrame) {
-						isFirstFrame = false;
-						firstData = data;
-					}
-					//超过最低时间时，下一步按钮可点击
-					totalTime = System.currentTimeMillis() - firstTime - pausedTime - ((long) (1.0 / (double) frameRate) * 1000);
-					if (!nextEnabled && totalTime >= RECORDING_CHANGE_TIME) {
-						nextEnabled = true;
-						nextBtn.setEnabled(true);
-					}
-
-					if (nextEnabled && totalTime >= RECORDING_MINIMUM_TIME) {
-						mHandler.sendEmptyMessage(5);
-					}
-
-					if (currentRecorderState == RecorderState.PRESS && totalTime >= RECORDING_CHANGE_TIME) {
-						currentRecorderState = RecorderState.LOOSEN;
-						mHandler.sendEmptyMessage(2);
-					}
-
-					mVideoTimestamp += frameTime;
-					if (lastSavedframe.getTimeStamp() > mVideoTimestamp) {
-						mVideoTimestamp = lastSavedframe.getTimeStamp();
-					}
-
-					recorderThread.putByteData(lastSavedframe);
-				}
-				byte[] tempData = rotateYUV420Degree90(data, previewWidth, previewHeight);
-				if(cameraSelection == 1)
-					tempData = rotateYUV420Degree270(data, previewWidth, previewHeight);
-				lastSavedframe = new SavedFrames(tempData,frameTimeStamp);
-			}
-
-			mCamera.addCallbackBuffer(bufferByte);
+			mCamera.addCallbackBuffer(data);
+//			//计算时间戳
+//			long frameTimeStamp;
+//			if(mAudioTimestamp == 0L && firstTime > 0L) {
+//				frameTimeStamp = 1000L * (System.currentTimeMillis() - firstTime);
+//			}else if (mLastAudioTimestamp == mAudioTimestamp) {
+//				frameTimeStamp = mAudioTimestamp + frameTime;
+//			}else{
+//				long l2 = (System.nanoTime() - mAudioTimeRecorded) / 1000L;
+//				frameTimeStamp = l2 + mAudioTimestamp;
+//				mLastAudioTimestamp = mAudioTimestamp;
+//			}
+//
+//			//录制视频
+//			if (recording && rec){
+//				if(lastSavedframe != null
+//					&& lastSavedframe.getFrameBytesData() != null ) {
+//					//保存某一幀的图片
+//					if (isFirstFrame) {
+//						isFirstFrame = false;
+//						firstData = data;
+//					}
+//					//超过最低时间时，下一步按钮可点击
+//					totalTime = System.currentTimeMillis() - firstTime - pausedTime - ((long) (1.0 / (double) frameRate) * 1000);
+//					if (!nextEnabled && totalTime >= RECORDING_CHANGE_TIME) {
+//						nextEnabled = true;
+//						nextBtn.setEnabled(true);
+//					}
+//
+//					if (nextEnabled && totalTime >= RECORDING_MINIMUM_TIME) {
+//						mHandler.sendEmptyMessage(5);
+//					}
+//
+//					if (currentRecorderState == RecorderState.PRESS && totalTime >= RECORDING_CHANGE_TIME) {
+//						currentRecorderState = RecorderState.LOOSEN;
+//						mHandler.sendEmptyMessage(2);
+//					}
+//
+//					mVideoTimestamp += frameTime;
+//					if (lastSavedframe.getTimeStamp() > mVideoTimestamp) {
+//						mVideoTimestamp = lastSavedframe.getTimeStamp();
+//					}
+//
+//					recorderThread.putByteData(lastSavedframe);
+//				}
+//				byte[] tempData = rotateYUV420Degree90(data, previewWidth, previewHeight);
+//				if(cameraSelection == 1)
+//					tempData = rotateYUV420Degree270(data, previewWidth, previewHeight);
+//				lastSavedframe = new SavedFrames(tempData,frameTimeStamp);
+//			}
+//
+//			mCamera.addCallbackBuffer(bufferByte);
 		}
 	}
 

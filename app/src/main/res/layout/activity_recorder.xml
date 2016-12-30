@@ -57,6 +57,7 @@
         android:paddingTop="20dp" >
 
         <Button
+            android:visibility="gone"
             android:id="@+id/recorder_cancel"
             android:layout_width="66dp"
             android:layout_height="36dp"
@@ -79,6 +80,7 @@
             />
 
         <Button
+            android:visibility="gone"
             android:id="@+id/recorder_next"
             android:layout_width="66dp"
             android:layout_height="36dp"

@@ -579,6 +579,8 @@ namespace ARecoder {
          * av_write_trailer() may try to use memory that was freed on
          * av_codec_close(). */
         av_write_trailer(fmt_ctx);
+
+        return OK;
     }
 
     void FFMPEGer::mux() {

@@ -92,11 +92,14 @@ namespace ARecoder {
 			return true;
 
 		mDone = true;
+		ALOGD("MuxEngine 1");
 		while(!mThreadExited){
 			mCond.waitRelative(mLock, 40000000);
 		}
+		ALOGD("MuxEngine 2");
 
 		mFFMPEG->finish();
+		ALOGD("MuxEngine 3");
 
 		mStarted = false;
 

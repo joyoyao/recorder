@@ -118,10 +118,10 @@ namespace ARecoder {
 
     void LocalMediaRecorder::stop() {
 
-
-        Message *msg = mMsgQueue->obtainMessage();
-        msg->what = MSG_STOP;
-        mMsgQueue->sendMessage(msg);
+          onStop();
+//        Message *msg = mMsgQueue->obtainMessage();
+//        msg->what = MSG_STOP;
+//        mMsgQueue->sendMessage(msg);
 
     }
 
@@ -143,8 +143,6 @@ namespace ARecoder {
         switch (msg->what) {
             case MSG_SET_OUTPUT_FILE: {
                 ALOGE("MSG_SET_OUTPUT_FILE %d ", MSG_SET_OUTPUT_FILE);
-
-
                 char *path = (char *) msg->obj;
                 strncpy(mOutputFile, path, sizeof(mOutputFile));
                 free(path);
@@ -220,7 +218,7 @@ namespace ARecoder {
         ALOGI("LocalMediaRecorder onStop2");
 
         mMuxEngine->stop();
-        ALOGI("LocalMediaRecorder onStop2");
+        ALOGI("LocalMediaRecorder onStop3");
 
 
     }

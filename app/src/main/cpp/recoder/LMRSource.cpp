@@ -310,7 +310,8 @@ namespace ARecoder {
 		}
 		ALOGI("LMRVideoSource stop1");
 		mGroup->stop_acquire();
-		ALOGI("LMRVideoSource stop2");
+
+		return true;
 	}
 	
 	status_t LMRVideoSource::read(MediaBuffer** buffer){

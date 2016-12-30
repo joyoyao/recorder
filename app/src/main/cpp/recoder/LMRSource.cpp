@@ -370,7 +370,7 @@ namespace ARecoder {
 	}
 	
 	LMRSource::~LMRSource(){
-		deInit();
+//		deInit();
 		
 		if(mMetaData != NULL){
 			delete mMetaData;

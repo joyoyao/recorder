@@ -191,7 +191,7 @@ namespace ARecoder {
 			recorderBufferQueue = NULL;
 		}
 
-		// destroy output mix object, and invalidate all associated interfaces
+		 //destroy output mix object, and invalidate all associated interfaces
 		if (outputMixObject != NULL) {
 			(*outputMixObject)->Destroy(outputMixObject);
 			outputMixObject = NULL;

@@ -31,6 +31,17 @@ extern "C"
 
 #include "utils/MetaData.h"
 
+
+/* Size of the recording buffer queue */
+#define NB_BUFFERS_IN_QUEUE 1
+
+/* Explicitly requesting SL_IID_ANDROIDSIMPLEBUFFERQUEUE and SL_IID_ANDROIDCONFIGURATION
+ * on the AudioRecorder object */
+#define NUM_EXPLICIT_INTERFACES_FOR_RECORDER 2
+
+/* Size of the recording buffer queue */
+#define NB_BUFFERS_IN_QUEUE 1
+
 namespace ARecoder {
 
 	class OpenSLRecorder {
@@ -49,8 +60,8 @@ namespace ARecoder {
 		MetaData* mMetaData;
 		
 		// engine interfaces
-		SLObjectItf engineObject;
-		SLEngineItf engineEngine;
+		SLObjectItf engineObject;//对象接口
+		SLEngineItf engineEngine;//引擎接口
 
 		// output mix interfaces
 		SLObjectItf outputMixObject;

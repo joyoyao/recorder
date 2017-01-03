@@ -72,6 +72,8 @@ namespace ARecoder {
 		OutputStream video_st;
 		OutputStream audio_st;
 
+	    AVPacket video_pkt, audio_pkt;
+
 		char mOutputFile[MAX_STRING_PATH_LEN];
 
 		int mWidth;

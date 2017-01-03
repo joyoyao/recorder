@@ -20,6 +20,8 @@ namespace ARecoder {
               video_codec(NULL),
               have_video(false),
               have_audio(false),
+              video_pkt(),
+              audio_pkt(),
               mMetaData(NULL) {
         memset(&video_st, 0, sizeof(OutputStream));
         memset(&audio_st, 0, sizeof(OutputStream));
@@ -400,6 +402,10 @@ namespace ARecoder {
         int dst_nb_samples;
         OutputStream *ost = &audio_st;
 
+
+        ALOGI("Error  encodeAudio");
+
+
         unsigned char *srcData = (unsigned char *) src->data() + src->range_offset();
         int copySize = getAudioEncodeBufferSize();
 
@@ -455,18 +461,18 @@ namespace ARecoder {
 
             pkt.pts = frame->pts;//
 
-#if 0
-            static int count = 0;
-            char a[50] = {0};
-            sprintf(a, "/sdcard/pcm%d", count++);
-            FILE* f1 = fopen(a, "ab");
-            if(f1 != NULL){
-                size_t res = fwrite(pkt.data, 1, pkt.size, f1);
-                fclose(f1);
-                ALOGV("fwrite %d of %d to /sdcard/pcm!", res, pkt.size);
-            }else
-                ALOGE("can not fopen /sdcard/pcm!!");
-#endif
+//#if 0
+//            static int count = 0;
+//            char a[50] = {0};
+//            sprintf(a, "/sdcard/pcm%d", count++);
+//            FILE* f1 = fopen(a, "ab");
+//            if(f1 != NULL){
+//                size_t res = fwrite(pkt.data, 1, pkt.size, f1);
+//                fclose(f1);
+//                ALOGV("fwrite %d of %d to /sdcard/pcm!", res, pkt.size);
+//            }else
+//                ALOGE("can not fopen /sdcard/pcm!!");
+//#endif
 
 
             if (got_packet) {
@@ -476,6 +482,9 @@ namespace ARecoder {
                     return UNKNOWN_ERROR;
                 }
             }
+
+            av_free_packet(&pkt);
+
         }
     }
 

@@ -138,7 +138,7 @@ namespace ARecoder {
 				if(!res)
 					break;
 			
-//				mFFMPEG->encodeAudio(buffer, out);
+				mFFMPEG->encodeAudio(buffer, out);
 
 				if(mVideoSrc != NULL)
 					mNextReadAudio = false;

@@ -306,7 +306,7 @@ public class RecorderActivity extends Activity implements OnClickListener, OnTou
                     Log.i("RecorderActivity", path);
                     mRecorder.setOutputFile(path);
                     mRecorder.setListener(mRecorderListener);
-                    mRecorder.setChannels(2);
+                    mRecorder.setChannels(1);
                     mRecorder.setSampleRate(44100);
                     mRecorder.setVideoSize(previewWidth, previewHeight);
                     mRecorder.setColorFormat("nv21");

@@ -121,7 +121,7 @@ namespace ARecoder {
     bool FFMPEGer::add_stream(OutputStream *ost, AVFormatContext *oc,
                               AVCodec **codec,
                               enum AVCodecID codec_id) {
-        AVCodecContext *c;
+        AVCodecContext *codecContext;
         int i;
 
         /* find the encoder */
@@ -134,68 +134,75 @@ namespace ARecoder {
 
         ALOGV("success to find encoder for '%s'",
               avcodec_get_name(codec_id));
-
+        //创建输出码流的AVStream。
         ost->st = avformat_new_stream(oc, *codec);
         if (!ost->st) {
             ALOGE("Could not allocate stream");
             return false;
         }
         ost->st->id = oc->nb_streams - 1;
-        c = ost->st->codec;
+        codecContext = ost->st->codec;
 
         switch ((*codec)->type) {
             case AVMEDIA_TYPE_AUDIO:
 //			c->sample_fmt  = (*codec)->sample_fmts ?
 //				(*codec)->sample_fmts[0] : AV_SAMPLE_FMT_NONE;//TODO:
+//                AV_SAMPLE_FMT_S16
+//                codecContext->sample_fmt =
+//                        (*codec)->sample_fmts[0];//TODO:
 
-                c->sample_fmt =
-                        (*codec)->sample_fmts[0];//TODO:
-                c->bit_rate = 64000;//TODO:
-                c->sample_rate = 44100;//TODO:
+                codecContext->sample_fmt=AV_SAMPLE_FMT_S16;//TODO:
+                codecContext->bit_rate = 64000;//TODO:
+                codecContext->sample_rate = 44100;//TODO:
                 if ((*codec)->supported_samplerates) {
-                    c->sample_rate = (*codec)->supported_samplerates[0];
+                    codecContext->sample_rate = (*codec)->supported_samplerates[0];
                     for (i = 0; (*codec)->supported_samplerates[i]; i++) {
                         if ((*codec)->supported_samplerates[i] == 44100)
-                            c->sample_rate = 44100;
+                            codecContext->sample_rate = 44100;
                     }
                 }
-                c->channels = av_get_channel_layout_nb_channels(c->channel_layout);
-                c->channel_layout = AV_CH_LAYOUT_STEREO;
-                if ((*codec)->channel_layouts) {
-                    c->channel_layout = (*codec)->channel_layouts[0];
-                    for (i = 0; (*codec)->channel_layouts[i]; i++) {
-                        if ((*codec)->channel_layouts[i] == AV_CH_LAYOUT_STEREO)
-                            c->channel_layout = AV_CH_LAYOUT_STEREO;
-                    }
-                }
-                c->channels = av_get_channel_layout_nb_channels(c->channel_layout);
-                ost->st->time_base = (AVRational) {1, c->sample_rate};
+//                codecContext->channels = av_get_channel_layout_nb_channels(codecContext->channel_layout);
+                codecContext->channels = 1;
+
+//                codecContext->channel_layout = AV_CH_LAYOUT_STEREO;
+//                if ((*codec)->channel_layouts) {
+//                    codecContext->channel_layout = (*codec)->channel_layouts[0];
+//                    for (i = 0; (*codec)->channel_layouts[i]; i++) {
+//                        if ((*codec)->channel_layouts[i] == AV_CH_LAYOUT_STEREO)
+//                            codecContext->channel_layout = AV_CH_LAYOUT_STEREO;
+//                    }
+//                }
+                codecContext->channel_layout = av_get_default_channel_layout(codecContext->channels);
+
+                codecContext->channels = 1;
+//                codecContext->channels = av_get_channel_layout_nb_channels(codecContext->channel_layout);
+                ost->st->time_base = (AVRational) {1, codecContext->sample_rate};
                 break;
             case AVMEDIA_TYPE_VIDEO:
-                c->codec_id = codec_id;
+                codecContext->codec_id = codec_id;
                 if (codec_id == AV_CODEC_ID_H264) {
-                    c->profile = FF_PROFILE_H264_BASELINE;
+                    codecContext->profile = FF_PROFILE_H264_BASELINE;
                 }
 
-                c->bit_rate = 400000;
+                codecContext->bit_rate = 400000;
                 /* Resolution must be a multiple of two. */
-                c->width = mWidth;
-                c->height = mHeight;
+                codecContext->width = mWidth;
+                codecContext->height = mHeight;
                 /* timebase: This is the fundamental unit of time (in seconds) in terms
                  * of which frame timestamps are represented. For fixed-fps content,
                  * timebase should be 1/framerate and timestamp increments should be
                  * identical to 1. */
                 ost->st->time_base = (AVRational) {1, STREAM_FRAME_RATE};
-                c->time_base = ost->st->time_base;
-                c->gop_size = 12; /* emit one intra frame every twelve frames at most */
-                c->pix_fmt = STREAM_PIX_FMT;//input fmt for the encoder.
+                codecContext->time_base = ost->st->time_base;
+                codecContext->gop_size = 12; /* emit one intra frame every twelve frames at most */
+                codecContext->pix_fmt = STREAM_PIX_FMT;//input fmt for the encoder.
                 break;
             default:
                 break;
         }
         /* Some formats want stream headers to be separate. */
         if (oc->oformat->flags & AVFMT_GLOBALHEADER)
-            c->flags |= CODEC_FLAG_GLOBAL_HEADER;
+            codecContext->flags |= CODEC_FLAG_GLOBAL_HEADER;
 
         return true;
     }
@@ -208,7 +215,7 @@ namespace ARecoder {
         c = ost->st->codec;
         /* open it */
         av_dict_copy(&opt, opt_arg, 0);
-
+        //打开编码器
         ret = avcodec_open2(c, codec, &opt);
         av_dict_free(&opt);
         if (ret < 0) {
@@ -452,7 +459,7 @@ namespace ARecoder {
                                           c->time_base);
                 ost->samples_count += dst_nb_samples;
             }
-
+            //编码音频。即将AVFrame（存储PCM采样数据）编码为AVPacket（存储AAC，MP3等格式的码流数据）
             ret = avcodec_encode_audio2(c, &pkt, frame, &got_packet);
             if (ret < 0) {
                 ALOGE("Error encoding audio frame: %s", av_err2str(ret));
@@ -476,6 +483,7 @@ namespace ARecoder {
 
 
             if (got_packet) {
+                //将编码后的视频码流写入文件
                 ret = write_frame(fmt_ctx, &c->time_base, ost->st, &pkt);
                 if (ret < 0) {
                     ALOGE("Error while writing audio frame: %s", av_err2str(ret));
@@ -486,6 +494,178 @@ namespace ARecoder {
             av_free_packet(&pkt);
 
         }
+    }
+
+
+//    status_t FFMPEGer::encodeAudio(void *data,int len) {
+//
+//        if(data != nullptr)
+//        {
+//            OutputStream *ost = &audio_st;
+//
+//            AVCodecContext* audioCodec =  ost->st->codec;;
+//
+//
+//
+//            AVFrame* pAudioFrame = NULL;
+//
+//            pAudioFrame=audio_st.tmp_frame;
+//            int srcNbSamples = 1;
+//
+//            while(1)
+//            {
+//                int dstNbSamples = m_context->maxDstNbSamples - m_context->dstSampleDataIndex;
+//
+//                // 4 stands for the output channels.
+//                auto convertData = m_context->dstSampleData[0] + 4 * m_context->dstSampleDataIndex;
+//
+//                int ret = swr_convert(m_context->pSwrCtx, &convertData, dstNbSamples, (const uint8_t**)data.data, srcNbSamples);
+//
+//                if(ret == 0)
+//                {
+//                    // CGE_LOG_ERROR("ret == 0");
+//                    break;
+//                }
+//                else if(ret < 0)
+//                {
+//                    CGE_LOG_ERROR("Error while converting...\n");
+//                    return false;
+//                }
+//
+//                m_context->dstSampleDataIndex += ret;
+//                srcNbSamples = 0;
+//
+//                if(m_context->dstSampleDataIndex >= m_context->maxDstNbSamples)
+//                {
+//                    m_context->dstSampleDataIndex = 0;
+//                    // CGE_LOG_ERROR("Recording...");
+//                    pAudioFrame->nb_samples = m_context->maxDstNbSamples;
+//                    pAudioFrame->quality = audioCodec->global_quality;
+//                    avcodec_fill_audio_frame(pAudioFrame, audioCodec->channels, audioCodec->sample_fmt, m_context->dstSampleData[0], m_context->dstSamplesSize, 0);
+//                    pAudioFrame->data[0] = m_context->dstSampleData[0];
+//                    pAudioFrame->linesize[0] = m_context->dstSamplesSize;
+//                    recordAudioFrame(pAudioFrame);
+//                }
+//            }
+//
+//            return pAudioFrame->key_frame != 0;
+//        }
+//
+//        return recordAudioFrame(nullptr);
+//
+//    }
+
+
+    status_t FFMPEGer::encodeAudio(void *data, int len) {
+        AVCodecContext *c;
+
+        AVFrame *frame = NULL;
+        int ret;
+        int got_packet;
+        int dst_nb_samples;
+        OutputStream *ost = &audio_st;
+
+
+        ALOGI("Error  encodeAudio%d", len);
+
+
+        unsigned char *srcData = (unsigned char *) data;
+//        int copySize = getAudioEncodeBufferSize();
+
+
+//        ALOGI("Error  encodeAudiocopySize%d", copySize);
+
+
+//        while (srcData <
+//               ((unsigned char *) data + len)) {
+            AVPacket pkt = {0}; // data and size must be 0;
+            av_init_packet(&pkt);
+            c = ost->st->codec;
+
+            frame = audio_st.tmp_frame;
+            ALOGI("Error  encodeAudio1");
+
+            memcpy(frame->data[0], srcData,len);
+//            srcData += copySize;
+            frame->pts = audio_st.next_pts;
+
+            audio_st.next_pts += frame->nb_samples;
+            ALOGI("Error  encodeAudio2");
+
+            if (frame) {
+                /* convert samples from native format to destination codec format, using the resampler */
+                /* compute destination number of samples */
+//                dst_nb_samples = av_rescale_rnd(
+//                        swr_get_delay(ost->swr_ctx, c->sample_rate) + frame->nb_samples,
+//                        c->sample_rate, c->sample_rate, AV_ROUND_UP);
+//                av_assert0(dst_nb_samples == frame->nb_samples);
+
+                /* when we pass a frame to the encoder, it may keep a reference to it
+                 * internally;
+                 * make sure we do not overwrite it here
+                 */
+                ALOGI("Error  encodeAudio3");
+
+                ret = av_frame_make_writable(ost->frame);
+                if (ret < 0)
+                    return UNKNOWN_ERROR;
+
+                /* convert to destination format */
+                ret = swr_convert(ost->swr_ctx,
+                                  ost->frame->data, dst_nb_samples,
+                                  (const uint8_t **) frame->data, frame->nb_samples);
+                if (ret < 0) {
+                    ALOGE("Error while converting");
+                    return UNKNOWN_ERROR;
+                }
+
+                frame = ost->frame;
+                frame->pts = av_rescale_q(ost->samples_count, (AVRational) {1, c->sample_rate},
+                                          c->time_base);
+                ost->samples_count += dst_nb_samples;
+            }
+            ALOGI("Error  encodeAudio4");
+
+            ret = avcodec_encode_audio2(c, &pkt, frame, &got_packet);
+            if (ret < 0) {
+                ALOGE("Error encoding audio frame: %s", av_err2str(ret));
+                return UNKNOWN_ERROR;
+            }
+
+            pkt.pts = frame->pts;//
+
+//#if 0
+//            static int count = 0;
+//            char a[50] = {0};
+//            sprintf(a, "/sdcard/pcm%d", count++);
+//            FILE* f1 = fopen(a, "ab");
+//            if(f1 != NULL){
+//                size_t res = fwrite(pkt.data, 1, pkt.size, f1);
+//                fclose(f1);
+//                ALOGV("fwrite %d of %d to /sdcard/pcm!", res, pkt.size);
+//            }else
+//                ALOGE("can not fopen /sdcard/pcm!!");
+//#endif
+
+            ALOGI("Error  encodeAudio5");
+
+            if (got_packet) {
+                ret = write_frame(fmt_ctx, &c->time_base, ost->st, &pkt);
+                if (ret < 0) {
+                    ALOGE("Error while writing audio frame: %s", av_err2str(ret));
+                    return UNKNOWN_ERROR;
+                }
+            }
+            ALOGI("Error  encodeAudio6");
+
+            av_free_packet(&pkt);
+            ALOGI("Error  encodeAudio7");
+
+
+//        }
+
+        return OK;
+
     }
 
     int FFMPEGer::write_frame(AVFormatContext *fmt_ctx, const AVRational *time_base, AVStream *st,
@@ -499,7 +679,7 @@ namespace ARecoder {
         return av_interleaved_write_frame(fmt_ctx, pkt);
     }
 
-    status_t FFMPEGer::encodeVideo(MediaBuffer *src, MediaBuffer *dst) {
+    status_t FFMPEGer::encodeVideo(void *data) {
         int ret;
         OutputStream *ost = &video_st;
         AVCodecContext *c;
@@ -508,14 +688,14 @@ namespace ARecoder {
         c = ost->st->codec;
 
         if (mPixFmt == AV_PIX_FMT_NV21) {
-            memcpy(ost->tmp_frame->data[0], src->data(), c->width * c->height);
-            memcpy(ost->tmp_frame->data[1], (char *) src->data() + c->width * c->height,
+            memcpy(ost->tmp_frame->data[0], data, c->width * c->height);
+            memcpy(ost->tmp_frame->data[1], (char *) data + c->width * c->height,
                    c->width * c->height / 2);
         } else if (mPixFmt == AV_PIX_FMT_YUV420P) {
-            memcpy(ost->frame->data[0], src->data(), c->width * c->height);
-            memcpy(ost->frame->data[1], (char *) src->data() + c->width * c->height,
+            memcpy(ost->frame->data[0], data, c->width * c->height);
+            memcpy(ost->frame->data[1], (char *) data + c->width * c->height,
                    c->width * c->height / 4);
-            memcpy(ost->frame->data[2], (char *) src->data() + c->width * c->height * 5 / 4,
+            memcpy(ost->frame->data[2], (char *) data + c->width * c->height * 5 / 4,
                    c->width * c->height / 4);
         }
 
@@ -581,6 +761,7 @@ namespace ARecoder {
 
         return OK;
     }
+
 
     status_t FFMPEGer::finish() {
         /* Write the trailer, if any. The trailer must be written before you

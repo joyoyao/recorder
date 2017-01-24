@@ -116,6 +116,11 @@ public class ARecorder {
         nativeWriteVideo(yuv, len);
     }
 
+
+    public void writeAudio(byte[] audio, int len){
+        nativeWriteAudio(audio, len);
+    }
+
     @Override
     protected void finalize() {
         nativeRelease();
@@ -125,7 +130,7 @@ public class ARecorder {
     private int mNativeContext = 0;
 
     private static final int NATIVE_MSG_SET_OUTPUT_FILE_DONE = 0;
-    private static final int NATIVE_MSG_SET_LISTENER_DONE = 1;
+    private static final int NATIxVE_MSG_SET_LISTENER_DONE = 1;
     private static final int NATIVE_MSG_SET_PARAMETER_DONE = 2;
     private static final int NATIVE_MSG_SET_PREVIEW_DONE = 3;
     private static final int NATIVE_MSG_START_DONE = 4;
@@ -142,6 +147,8 @@ public class ARecorder {
     private native void nativeStop();
     private native void nativeRelease();
     private native void nativeWriteVideo(byte[] yuv, int len);
+
+    private native void nativeWriteAudio(byte[] audio, int len);
 
     private native void setParameter(String nameValuePair);
     private native final void nativeSetup(Object arecorder_this);

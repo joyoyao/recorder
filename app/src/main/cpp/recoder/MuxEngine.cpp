@@ -147,7 +147,7 @@ namespace ARecoder {
 				if(!res)
 					break;
 			
-				mFFMPEG->encodeVideo(buffer, out);
+//				mFFMPEG->encodeVideo(buffer, out);
 
 				ALOGI("encodeVideo");
 

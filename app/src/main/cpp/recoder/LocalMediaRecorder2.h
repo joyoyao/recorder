@@ -41,9 +41,6 @@ namespace ARecoder {
 		virtual void stop();
 		virtual void writeVideo(void* data, int dataSize);
 
-		virtual void writeAudio(void* data, int dataSize);
-
-
 	protected:
 		virtual ~LocalMediaRecorder();
 
@@ -55,7 +52,7 @@ namespace ARecoder {
 
 		LMRSource* mLMRSource;
 		Prefetcher* mPrefetcher;
-		FFMPEGer* mFFMPEG;
+		MuxEngine* mMuxEngine;
 
 		MetaData* mMetaData;
 

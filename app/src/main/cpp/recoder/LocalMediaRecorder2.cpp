@@ -1,4 +1,4 @@
-#include "LocalMediaRecorder.h"
+#include "LocalMediaRecorder2.h"
 #include "utils/Log.h"
 
 #define LOG_TAG "LocalMediaRecorder"
@@ -10,7 +10,7 @@ namespace ARecoder {
               mMsgQueue(NULL),
               mLMRSource(NULL),
               mPrefetcher(NULL),
-              mFFMPEG(NULL),
+              mMuxEngine(NULL),
               mChannels(0),
               mSampleRate(0),
               mWidth(0),
@@ -22,7 +22,7 @@ namespace ARecoder {
     }
 
     LocalMediaRecorder::~LocalMediaRecorder() {
-//        onStop();
+        onStop();
 
         if (mMsgQueue != NULL) {
             delete mMsgQueue;
@@ -39,9 +39,9 @@ namespace ARecoder {
             mMetaData = NULL;
         }
 
-        if (mFFMPEG != NULL) {
-            delete mFFMPEG;
-            mFFMPEG = NULL;
+        if (mMuxEngine != NULL) {
+            delete mMuxEngine;
+            mMuxEngine = NULL;
         }
 
         if (mPrefetcher != NULL) {
@@ -126,27 +126,9 @@ namespace ARecoder {
     }
 
     void LocalMediaRecorder::writeVideo(void *data, int dataSize) {
-
-
-        if (mFFMPEG != NULL) {
-
-            ALOGI("  encodeVideo");
-
-            mFFMPEG->encodeVideo(data);
+        if (mLMRSource != NULL) {
+            mLMRSource->writeVideo(data, dataSize);
         }
-//        if (mLMRSource != NULL) {
-//            mLMRSource->writeVideo(data, dataSize);
-//        }
-    }
-
-
-    void LocalMediaRecorder::writeAudio(void *data, int dataSize) {
-        if (mFFMPEG != NULL) {
-//            ALOGI("  writeAudio");
-
-            mFFMPEG->encodeAudio(data,dataSize);
-        }
-
     }
 
     void LocalMediaRecorder::HandleMessage(Message *msg, void *context) {
@@ -232,65 +214,54 @@ namespace ARecoder {
 
         ALOGI("LocalMediaRecorder onStop1");
 
-//        mPrefetcher->stop();
+        mPrefetcher->stop();
         ALOGI("LocalMediaRecorder onStop2");
 
-        mFFMPEG->finish();
+        mMuxEngine->stop();
         ALOGI("LocalMediaRecorder onStop3");
 
 
     }
 
     void LocalMediaRecorder::onStart() {
-//        mMuxEngine = new MuxEngine();
-//        mMuxEngine->setOutputFile(mOutputFile);
-//        mMuxEngine->width = mWidth;
-//        mMuxEngine->height = mHeight;
-//        bool res = mMuxEngine->init();
+        mMuxEngine = new MuxEngine();
+        mMuxEngine->setOutputFile(mOutputFile);
+        mMuxEngine->width = mWidth;
+        mMuxEngine->height = mHeight;
+        bool res = mMuxEngine->init();
+        if (!res) {
+            mListener->notify(MediaRecorderListener::NATIVE_MSG_ERROR);
+            return;
+        }
 
+        mLMRSource = new LMRSource;
 
-
-        mFFMPEG = new FFMPEGer;
-        mFFMPEG->setOutputFile(mOutputFile);
-        mFFMPEG->setVideoSize(mWidth, mHeight);
-        mFFMPEG->setVideoColorFormat(OMX_COLOR_FormatYUV420SemiPlanar);
-
-        //        if (!res) {
-//            mListener->notify(MediaRecorderListener::NATIVE_MSG_ERROR);
-//            return;
-//        }
-
-//        mLMRSource = new LMRSource;
-//
         mMetaData->setInt32(kKeyHasAudio, 1);
         mMetaData->setInt32(kKeyChannelCount, mChannels);
         mMetaData->setInt32(kKeySampleRate, mSampleRate);
-//        int bufSize;
-//        res = mMuxEngine->getAudioEncodeBufferSize(&bufSize);
-//        if (res) {
-//            mMetaData->setInt32(kKeyAudioEncodeBufSize, bufSize);
-//        }
-//
+        int bufSize;
+        res = mMuxEngine->getAudioEncodeBufferSize(&bufSize);
+        if (res) {
+            mMetaData->setInt32(kKeyAudioEncodeBufSize, bufSize);
+        }
+
         mMetaData->setInt32(kKeyHasVideo, 1);
         mMetaData->setInt32(kKeyWidth, mWidth);
         mMetaData->setInt32(kKeyHeight, mHeight);
         mMetaData->setInt32(kKeyColorFormat, mColorFormat);
 
-        bool res =  mFFMPEG->init(mMetaData);
+        res = mLMRSource->init(mMetaData);
+        if (!res) {
+            mListener->notify(MediaRecorderListener::NATIVE_MSG_ERROR);
+            return;
+        }
 
-//
-//        res = mLMRSource->init(mMetaData);
-//        if (!res) {
-//            mListener->notify(MediaRecorderListener::NATIVE_MSG_ERROR);
-//            return;
-//        }
-//
-//        mPrefetcher = new Prefetcher(mLMRSource);
-//        mPrefetcher->start();
-//
-//        mMuxEngine->setAudioSource(mPrefetcher->getSource(MEDIA_TYPE_AUDIO));
-//        mMuxEngine->setVideoSource(mPrefetcher->getSource(MEDIA_TYPE_VIDEO));
-//        mMuxEngine->start();
+        mPrefetcher = new Prefetcher(mLMRSource);
+        mPrefetcher->start();
+
+        mMuxEngine->setAudioSource(mPrefetcher->getSource(MEDIA_TYPE_AUDIO));
+        mMuxEngine->setVideoSource(mPrefetcher->getSource(MEDIA_TYPE_VIDEO));
+        mMuxEngine->start();
         mListener->notify(MediaRecorderListener::NATIVE_MSG_START_DONE);
     }
 

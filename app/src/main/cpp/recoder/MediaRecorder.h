@@ -62,6 +62,8 @@ namespace ARecoder {
 		virtual void start() = 0;
 		virtual void stop() = 0;
 		virtual void writeVideo(void* data, int dataSize) = 0;
+		virtual void writeAudio(void* data, int dataSize) = 0;
+
 
 	protected:
 		MediaRecorder(){}

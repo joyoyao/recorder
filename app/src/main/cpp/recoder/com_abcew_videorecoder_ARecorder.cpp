@@ -304,6 +304,31 @@ JNIEXPORT void JNICALL Java_com_abcew_videorecoder_ARecorder_nativeWriteVideo
 
 }
 
+
+JNIEXPORT void JNICALL
+Java_com_abcew_videorecoder_ARecorder_nativeWriteAudio(JNIEnv *env, jobject instance,
+                                                       jbyteArray audio_, jint len) {
+
+
+    MediaRecorder* mr = getMediaRecorder(env, instance);
+    if(mr == NULL){
+        ALOGE("no Recorder found for setSurface");
+        return;
+    }
+    jbyte *audio = env->GetByteArrayElements(audio_, NULL);
+    unsigned char* pBuffer = (unsigned char*)audio;
+
+    if(pBuffer == NULL){
+        ALOGE("fail to get buffer pointer from jbyteArray!!");
+        return;
+    }
+
+    mr->writeAudio(pBuffer, len);
+    // TODO
+
+    env->ReleaseByteArrayElements(audio_, audio, 0);
+}
+
 /*
  * Class:     com_abcew_videorecoder_ARecorder
  * Method:    setParameter
@@ -370,3 +395,4 @@ jint JNI_OnLoad(JavaVM* vm, void* reserved){
 
     return JNI_VERSION_1_4;
 }
+

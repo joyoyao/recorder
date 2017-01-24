@@ -93,6 +93,15 @@ JNIEXPORT void JNICALL Java_com_abcew_videorecoder_ARecorder_nativeRelease
 JNIEXPORT void JNICALL Java_com_abcew_videorecoder_ARecorder_nativeWriteVideo
   (JNIEnv *, jobject, jbyteArray, jint);
 
+
+/*
+ * Class:     com_abcew_videorecoder_ARecorder
+ * Method:    nativeWriteVideo
+ * Signature: ([BI)V
+ */
+JNIEXPORT void JNICALL Java_com_abcew_videorecoder_ARecorder_nativeWriteAudio
+        (JNIEnv *, jobject, jbyteArray, jint);
+
 /*
  * Class:     com_abcew_videorecoder_ARecorder
  * Method:    setParameter

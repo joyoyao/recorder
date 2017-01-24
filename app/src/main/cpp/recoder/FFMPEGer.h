@@ -39,8 +39,14 @@ namespace ARecoder {
 		
 		int getAudioEncodeBufferSize();
 
+		status_t encodeVideo(void *data);
+
+
 		status_t encodeAudio(MediaBuffer* src, MediaBuffer* dst);
 		status_t encodeVideo(MediaBuffer* src, MediaBuffer* dst);
+
+		status_t encodeAudio(void *data,int len);
+
 
 		status_t finish();
 		
@@ -94,6 +100,8 @@ namespace ARecoder {
 
 		FFMPEGer(const FFMPEGer&);
 		FFMPEGer& operator=(const FFMPEGer&);
+
+		bool recordAudioFrame(AVFrame *pAudioFrame);
 	};
 	
 }//namespace
